@@ -1,23 +1,54 @@
-import React from 'react';
-import { Mail, Lock, ArrowRight, Github, Chrome, Eye, EyeOff } from 'lucide-react';
-import { Link } from 'react-router';
+import React, { useState } from 'react';
+import { Mail, Lock, ArrowRight, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { useNavigate } from 'react-router';
+import { useAuth } from '../../context/AuthContext';
+import useAxiosSecure from '../../hooks/useAxiosSecure';
 
 const Login = () => {
-    const [showPassword, setShowPassword] = React.useState(false);
+    const axiosSecure = useAxiosSecure();
+    const [showPassword, setShowPassword] = useState(false);
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
+
+    const { login } = useAuth();
+    const navigate = useNavigate();
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError('');
+        setLoading(true);
+
+        try {
+            const res = await axiosSecure.post('/api/login', {
+                email,
+                password,
+            });
+
+            const { id, email: userEmail, token } = res.data;
+            login({ id, email: userEmail }, token);
+            navigate('/');
+        } catch (err) {
+            const msg = err?.response?.data?.message || 'Invalid email or password. Please try again.';
+            setError(msg);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <div className="min-h-screen w-full flex items-center justify-center relative overflow-hidden bg-[#0A1612]">
-            {/* Background Decorative Elements with Pure CSS Animations */}
+            {/* Background Decorative Elements */}
             <div className="absolute inset-0 z-0 pointer-events-none">
                 <div className="absolute -top-[20%] -left-[10%] w-[60%] h-[60%] bg-primary/30 rounded-full blur-[120px] animate-pulse" />
                 <div className="absolute -bottom-[10%] -right-[5%] w-[50%] h-[50%] bg-accent/20 rounded-full blur-[100px] animate-pulse [animation-delay:2s]" />
-
-                {/* Subtle Grid Overlay */}
                 <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-[0.03]" />
             </div>
 
             {/* Content Container */}
             <div className="relative z-10 w-full max-w-[1100px] flex flex-col md:flex-row items-stretch justify-center p-4 sm:p-6 fade-in-up">
+
                 {/* Left Side: Brand Info */}
                 <div className="hidden lg:flex flex-col justify-center flex-1 pr-16 text-white slide-in-left">
                     <div>
@@ -51,28 +82,41 @@ const Login = () => {
 
                 {/* Right Side: Login Form */}
                 <div className="w-full max-w-[480px] mx-auto slide-in-right">
-                    <div className="backdrop-blur-3xl bg-white/5 border border-white/10 rounded-[48px] p-8 md:p-14 shadow-[0_32px_80px_rgba(0,0,0,0.5)] relative overflow-hidden group border-t-white/20">
-                        {/* Glow Effect */}
+                    <div className="backdrop-blur-3xl bg-white/5 border border-white/10 rounded-[48px] p-8 md:p-14 shadow-[0_32px_80px_rgba(0,0,0,0.5)] relative overflow-hidden">
+                        {/* Top Glow */}
                         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-1 bg-linear-to-r from-transparent via-accent to-transparent opacity-50" />
 
-                        <div className="mb-12 text-center lg:text-left">
+                        <div className="mb-10 text-center lg:text-left">
                             <h2 className="text-4xl font-black text-white mb-3 tracking-tight">Login Account</h2>
                             <p className="text-white/50 font-medium">Elevate your productivity today.</p>
                         </div>
 
-                        <form className="space-y-7">
+                        {/* Error Message */}
+                        {error && (
+                            <div className="mb-6 flex items-center gap-3 bg-red-500/10 border border-red-500/20 text-red-400 rounded-2xl px-5 py-4 text-sm font-medium">
+                                <AlertCircle size={18} className="shrink-0" />
+                                {error}
+                            </div>
+                        )}
+
+                        <form onSubmit={handleSubmit} className="space-y-7">
+                            {/* Email Field */}
                             <div className="space-y-3">
                                 <label className="text-[11px] font-black text-white/40 uppercase tracking-[0.2em] ml-1">Work Email</label>
                                 <div className="relative group/input">
                                     <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within/input:text-accent transition-all duration-300" size={22} />
                                     <input
                                         type="email"
-                                        placeholder="name@company.com"
-                                        className="w-full bg-white/5 border border-white/10 text-white font-medium rounded-3xl py-5 pl-14 pr-5 outline-none focus:border-accent/40 focus:bg-white/10 focus:ring-4 focus:ring-accent/5 transition-all duration-300 placeholder:text-white/10"
+                                        placeholder="user1@example.com"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        required
+                                        className="w-full bg-white/5 border border-white/10 text-white font-medium rounded-3xl py-5 pl-14 pr-5 outline-none focus:border-accent/40 focus:bg-white/10 focus:ring-4 focus:ring-accent/5 transition-all duration-300 placeholder:text-white/20"
                                     />
                                 </div>
                             </div>
 
+                            {/* Password Field */}
                             <div className="space-y-3">
                                 <label className="text-[11px] font-black text-white/40 uppercase tracking-[0.2em] ml-1">Secure Password</label>
                                 <div className="relative group/input">
@@ -80,6 +124,9 @@ const Login = () => {
                                     <input
                                         type={showPassword ? "text" : "password"}
                                         placeholder="••••••••"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        required
                                         className="w-full bg-white/5 border border-white/10 text-white font-medium rounded-3xl py-5 pl-14 pr-14 outline-none focus:border-accent/40 focus:bg-white/10 focus:ring-4 focus:ring-accent/5 transition-all duration-300 placeholder:text-white/10"
                                     />
                                     <button
@@ -90,37 +137,34 @@ const Login = () => {
                                         {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                                     </button>
                                 </div>
-                                <div className="flex justify-end pt-1">
-                                    <Link to="#" className="text-sm font-bold text-accent hover:text-secondary hover:underline transition-all decoration-2">Lost Password?</Link>
-                                </div>
                             </div>
 
-                            <button className="w-full bg-linear-to-r from-primary to-secondary hover:from-primary hover:to-accent text-white font-black text-lg py-5 rounded-3xl flex items-center justify-center gap-3 transition-all active:scale-[0.97] cursor-pointer shadow-2xl shadow-primary/20 hover:shadow-primary/40 mt-4 group/btn">
-                                Access Dashboard
-                                <ArrowRight className="group-hover:translate-x-1.5 transition-transform duration-300" size={22} strokeWidth={3} />
+                            {/* Submit Button */}
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="w-full bg-linear-to-r from-primary to-secondary hover:from-primary hover:to-accent disabled:opacity-60 disabled:cursor-not-allowed text-white font-black text-lg py-5 rounded-3xl flex items-center justify-center gap-3 transition-all active:scale-[0.97] cursor-pointer shadow-2xl shadow-primary/20 hover:shadow-primary/40 mt-4 group/btn"
+                            >
+                                {loading ? (
+                                    <>
+                                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                        Authenticating...
+                                    </>
+                                ) : (
+                                    <>
+                                        Access Dashboard
+                                        <ArrowRight className="group-hover/btn:translate-x-1.5 transition-transform duration-300" size={22} strokeWidth={3} />
+                                    </>
+                                )}
                             </button>
                         </form>
 
-                        <div className="my-12 flex items-center gap-5">
-                            <div className="h-[1px] flex-1 bg-white/5" />
-                            <span className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em] whitespace-nowrap">Unified Login</span>
-                            <div className="h-[1px] flex-1 bg-white/5" />
+                        {/* Hint for demo */}
+                        <div className="mt-8 p-4 bg-white/5 border border-white/5 rounded-2xl">
+                            <p className="text-white/30 text-[12px] text-center font-medium">
+                                Demo: <span className="text-accent/70 font-bold">user1@example.com</span> / <span className="text-accent/70 font-bold">password123</span>
+                            </p>
                         </div>
-
-                        <div className="grid grid-cols-2 gap-5">
-                            <button className="flex items-center justify-center gap-3 bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 text-white py-4 rounded-3xl transition-all cursor-pointer group/social">
-                                <Chrome size={22} className="group-hover:scale-110 transition-transform" />
-                                <span className="text-sm font-black tracking-tight">Google</span>
-                            </button>
-                            <button className="flex items-center justify-center gap-3 bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 text-white py-4 rounded-3xl transition-all cursor-pointer group/social">
-                                <Github size={22} className="group-hover:scale-110 transition-transform" />
-                                <span className="text-sm font-black tracking-tight">Github</span>
-                            </button>
-                        </div>
-
-                        <p className="mt-14 text-center text-white/40 text-[15px] font-medium">
-                            New to Donezo? <Link to="#" className="text-white font-black hover:text-accent transition-all border-b-2 border-accent/30 hover:border-accent">Create Studio</Link>
-                        </p>
                     </div>
                 </div>
             </div>
@@ -138,14 +182,9 @@ const Login = () => {
                     from { opacity: 0; transform: translateX(40px); }
                     to { opacity: 1; transform: translateX(0); }
                 }
-                @keyframes scaleIn {
-                    from { opacity: 0; transform: scale(0.95); }
-                    to { opacity: 1; transform: scale(1); }
-                }
                 .fade-in-up { animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
                 .slide-in-left { animation: slideInLeft 1s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
                 .slide-in-right { animation: slideInRight 1s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-                .scale-in { animation: scaleIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) delay 0.4s forwards; }
             `}</style>
         </div>
     );

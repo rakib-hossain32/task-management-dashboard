@@ -1,4 +1,5 @@
-import { NavLink } from 'react-router';
+import { NavLink, useNavigate } from 'react-router';
+import { useAuth } from '../../context/AuthContext';
 import {
     LayoutDashboard,
     CheckSquare,
@@ -28,6 +29,13 @@ const generalItems = [
 ];
 
 const Sidebar = ({ isOpen, onClose, isMinimized, onToggleMinimize }) => {
+    const { logout, user } = useAuth();
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        logout();
+        navigate('/auth/login');
+    };
     return (
         <>
             {/* Mobile Overlay */}
@@ -198,12 +206,13 @@ const Sidebar = ({ isOpen, onClose, isMinimized, onToggleMinimize }) => {
                         </div>
                         {!isMinimized && (
                             <div className="flex-1 min-w-0">
-                                <p className="text-sm font-bold text-primary truncate">Alex Morgan</p>
-                                <p className="text-[11px] text-secondary truncate">alex.m@donezo.com</p>
+                                <p className="text-sm font-bold text-primary truncate">{user?.email?.split('@')[0] || 'User'}</p>
+                                <p className="text-[11px] text-secondary truncate">{user?.email || 'user@donezo.com'}</p>
                             </div>
                         )}
                         <button
-                            className={`text-secondary hover:text-primary hover:bg-primary/5 rounded-xl transition-all duration-300 cursor-pointer active:scale-90 ${isMinimized ? 'p-1.5 mt-2' : 'p-2'}`}
+                            onClick={handleLogout}
+                            className={`text-secondary hover:text-red-500 hover:bg-red-50 rounded-xl transition-all duration-300 cursor-pointer active:scale-90 ${isMinimized ? 'p-1.5 mt-2' : 'p-2'}`}
                             title="Logout"
                         >
                             <LogOut size={18} />
