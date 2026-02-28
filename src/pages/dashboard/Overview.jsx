@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, ArrowUpRight, TrendingUp } from 'lucide-react';
 import useAxiosSecure from '../../hooks/useAxiosSecure';
-import ProjectAnalytics from '../../components/Dashboard/ProjectAnalytics';
-import Reminders from '../../components/Dashboard/Reminders';
+import ProjectAnalytics from '../../components/dashboard/ProjectAnalytics';
+import Reminders from '../../components/dashboard/Reminders';
 import TeamCollaboration from '../../components/dashboard/TeamCollaboration';
 import ProjectProgress from '../../components/dashboard/ProjectProgress';
 import ProjectList from '../../components/dashboard/ProjectList';
@@ -81,21 +81,20 @@ const DashboardOverview = () => {
             </div>
 
             {/* --- CORE DASHBOARD GRID --- */}
-            {/* Organized into 3 vertical columns to match the specific height requirements from the design */}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 mb-10 items-start">
-                {/* Column 1: Analytics & Team */}
-                <div className="flex flex-col gap-8">
-                    <ProjectAnalytics />
-                    <TeamCollaboration />
-                </div>
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 mb-10 items-start">
 
-                {/* Column 2: Reminders & Progress */}
-                <div className="flex flex-col gap-8">
+                {/* Left & Middle Column Group: Ensures Row Alignment */}
+                <div className="xl:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {/* Row 1: Analytics & Reminders */}
+                    <ProjectAnalytics />
                     <Reminders />
+
+                    {/* Row 2: Team & Progress (Starts at the same level) */}
+                    <TeamCollaboration />
                     <ProjectProgress />
                 </div>
 
-                {/* Column 3: Project List & Timer */}
+                {/* Right Column: Independent Stack */}
                 <div className="flex flex-col gap-8">
                     <ProjectList />
                     <TimeTracker />
@@ -115,7 +114,7 @@ const StatsCard = ({ data }) => {
     return (
         <div className={`
             relative p-6 rounded-[28px] overflow-hidden transition-all duration-300 hover:-translate-y-1
-            ${isPrimary ? 'bg-gradient-to-br from-[#125B3E] to-[#0A3D2C] text-white shadow-xl shadow-green-900/10' : 'bg-white border border-gray-100/50 shadow-sm'}
+            ${isPrimary ? 'bg-linear-to-br from-[#125B3E] to-[#0A3D2C] text-white shadow-xl shadow-green-900/10' : 'bg-white border border-gray-100/50 shadow-sm'}
         `}>
             {/* Flex container for label and action button */}
             <div className="flex justify-between items-start mb-4">

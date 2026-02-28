@@ -32,7 +32,7 @@ const TimeTracker = () => {
     };
 
     return (
-        <div className="bg-[#0D3D29] rounded-[32px] p-8 relative overflow-hidden shadow-2xl h-full">
+        <div className="bg-[#0D3D29] rounded-[32px] p-10 relative overflow-hidden shadow-2xl h-full">
             {/* BACKGROUND PATTERN: Premium ellipses effect matching the design reference */}
             <div className="absolute inset-0 opacity-20 pointer-events-none">
                 <svg className="w-full h-full" viewBox="0 0 200 200" preserveAspectRatio="none">

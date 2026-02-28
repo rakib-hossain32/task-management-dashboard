@@ -123,14 +123,14 @@ const ProjectAnalytics = () => {
                     <BarChart
                         data={CHART_DATA}
                         barSize={38}
-                        margin={{ top: 40, right: 0, left: 0, bottom: 0 }}
+                        margin={{ top: 40, right: 0, left: 0, bottom: 30 }}
                     >
                         <XAxis
                             dataKey="day"
                             axisLine={false}
                             tickLine={false}
                             tick={{ fill: '#9CA3AF', fontSize: 13, fontWeight: 500 }}
-                            dy={15}
+                            dy={10}
                         />
                         <YAxis hide />
                         <Tooltip cursor={{ fill: 'transparent' }} content={() => null} />
