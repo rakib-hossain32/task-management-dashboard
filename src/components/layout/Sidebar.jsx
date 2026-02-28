@@ -1,3 +1,4 @@
+import React from 'react';
 import { NavLink, useNavigate } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
 import {
@@ -9,235 +10,257 @@ import {
     Settings,
     HelpCircle,
     LogOut,
-    Plus,
     X,
     ChevronLeft,
     Menu
 } from 'lucide-react';
 
-const menuItems = [
-    { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard', path: '/', badge: null },
-    { id: 'tasks', icon: CheckSquare, label: 'Tasks', path: '/tasks', badge: '12' },
-    { id: 'calendar', icon: Calendar, label: 'Calendar', path: '/calendar', badge: null },
-    { id: 'analytics', icon: BarChart2, label: 'Analytics', path: '/analytics', badge: null },
-    { id: 'team', icon: Users, label: 'Team', path: '/team', badge: null },
-];
+/**
+ * Navigation Configuration
+ * Grouped by sections for easier maintenance and human readability.
+ */
+const NAVIGATION_SECTIONS = {
+    main: [
+        { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard', path: '/', badge: null },
+        { id: 'tasks', icon: CheckSquare, label: 'Tasks', path: '/tasks', badge: '12+' },
+        { id: 'calendar', icon: Calendar, label: 'Calendar', path: '/calendar', badge: null },
+        { id: 'analytics', icon: BarChart2, label: 'Analytics', path: '/analytics', badge: null },
+        { id: 'team', icon: Users, label: 'Team', path: '/team', badge: null },
+    ],
+    general: [
+        { id: 'settings', icon: Settings, label: 'Settings', path: '/settings' },
+        { id: 'help', icon: HelpCircle, label: 'Help Center', path: '/help' },
+    ]
+};
 
-const generalItems = [
-    { id: 'settings', icon: Settings, label: 'Settings', path: '/settings' },
-    { id: 'help', icon: HelpCircle, label: 'Help Center', path: '/help' },
-];
-
+/**
+ * Sidebar Component
+ * Provides primary navigation for the dashboard application.
+ * Supports both full-width and minimized states.
+ */
 const Sidebar = ({ isOpen, onClose, isMinimized, onToggleMinimize }) => {
-    const { logout, user } = useAuth();
+    const { logout } = useAuth();
     const navigate = useNavigate();
 
-    const handleLogout = () => {
+    // Trigger logout flow and redirect user to login page
+    const handleLogoutAction = () => {
         logout();
         navigate('/auth/login');
     };
+
+    /**
+     * Internal styling helper for Navigation Links
+     * Ensures consistent look for active vs inactive states
+     */
+    const getNavLinkClasses = (isActive) => {
+        const baseClasses = "flex items-center px-4 py-2.5 rounded-2xl transition-all duration-200 group relative";
+        const stateClasses = isActive ? "text-[#111827]" : "text-gray-400 hover:text-gray-600";
+        const layoutClasses = isMinimized ? "justify-center" : "justify-between";
+
+        return `${baseClasses} ${stateClasses} ${layoutClasses}`;
+    };
+
     return (
         <>
-            {/* Mobile Overlay */}
+            {/* Overlay for mobile devices when sidebar is active */}
             <div
-                className={`fixed inset-0 bg-primary/40 backdrop-blur-sm z-40 lg:hidden transition-opacity duration-300 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-                    }`}
+                className={`fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
                 onClick={onClose}
             />
 
-            {/* Sidebar Content */}
+            {/* Main Container: Controls width and visibility transitions */}
             <aside className={`
-                fixed lg:sticky top-0 left-0 z-50 h-screen bg-white flex flex-col border-r border-accent/20 shadow-xl lg:shadow-none transition-all duration-300 ease-in-out
+                fixed lg:sticky top-0 left-0 z-50 h-screen bg-white flex flex-col border-r border-gray-100 
+                transition-all duration-300 ease-in-out
                 ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
                 ${isMinimized ? 'w-20' : 'w-72'}
             `}>
-                {/* Logo Section */}
-                <div className={`flex items-center pt-8 pb-10 transition-all duration-300 ${isMinimized ? 'px-4 justify-center' : 'px-9 justify-start'}`}>
-                    <NavLink to="/" className="flex items-center gap-4 group cursor-pointer">
-                        <div className="relative shrink-0">
-                            <div className="w-11 h-11 bg-white border border-accent/10 rounded-2xl flex items-center justify-center shadow-sm transition-transform duration-300 group-hover:scale-105">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
-                                    <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z" />
-                                    <path d="M12 8a4 4 0 1 0 4 4 4 4 0 0 0-4-4z" />
-                                </svg>
-                            </div>
+
+                {/* BRAND SECTON: Contains Logo and Minimize Toggle */}
+                <div className={`flex items-center pt-6 pb-6 transition-all duration-300 ${isMinimized ? 'px-4 justify-center' : 'px-8 justify-between'}`}>
+                    <NavLink to="/" className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-primary border-2 border-primary rounded-full flex items-center justify-center p-0.5 shadow-sm shrink-0">
+                            <LogoIcon />
                         </div>
                         {!isMinimized && (
-                            <span className="text-2xl font-black text-[#0D1611] tracking-tight">
-                                Donezo
-                            </span>
+                            <span className="text-2xl font-bold text-[#111827] tracking-tighter">Donezo</span>
                         )}
                     </NavLink>
 
-                    {/* Mobile Close Button */}
-                    <button
-                        onClick={onClose}
-                        className="lg:hidden p-2 ml-auto text-secondary hover:text-primary hover:bg-accent/10 rounded-xl transition-colors shrink-0"
-                    >
+                    {/* Minimize toggle for desktop view */}
+                    {!isMinimized && (
+                        <button
+                            onClick={onToggleMinimize}
+                            className="hidden lg:flex p-1.5 text-gray-400 hover:text-primary hover:bg-primary/5 rounded-xl transition-all"
+                            aria-label="Minimize sidebar"
+                        >
+                            <ChevronLeft size={20} />
+                        </button>
+                    )}
+
+                    {/* Close button for mobile view */}
+                    <button onClick={onClose} className="lg:hidden ml-auto p-2 text-gray-400 hover:text-gray-600">
                         <X size={20} />
                     </button>
                 </div>
 
-                {/* Minimize Toggle Button - Dedicated Section */}
-                <div className={`px-4 mb-4 hidden lg:flex ${isMinimized ? 'justify-center' : 'justify-end'}`}>
-                    <button
-                        onClick={onToggleMinimize}
-                        className="p-2 text-secondary hover:text-primary hover:bg-primary/10 rounded-xl transition-all duration-300 cursor-pointer group"
-                        title={isMinimized ? "Expand Sidebar" : "Minimize Sidebar"}
-                    >
-                        {isMinimized ? (
-                            <Menu size={20} className="group-hover:scale-110" />
-                        ) : (
-                            <ChevronLeft size={20} className="group-hover:-translate-x-0.5" />
-                        )}
-                    </button>
-                </div>
-
-                {/* Main Navigation */}
-                <div className="flex-1 overflow-x-hidden overflow-y-auto px-1 custom-scrollbar">
-                    <div className="mb-6">
-                        {!isMinimized && (
-                            <div className="flex items-center justify-between px-6 mb-3">
-                                <p className="text-[11px] font-bold text-secondary uppercase tracking-[0.2em]">General Menu</p>
-                                <button className="p-1 hover:bg-primary/10 rounded-md transition-colors text-primary cursor-pointer opacity-40 hover:opacity-100">
-                                    <Plus size={14} />
-                                </button>
-                            </div>
-                        )}
-                        <ul className="space-y-1">
-                            {menuItems.map(({ id, icon: Icon, label, path, badge }) => (
-                                <li key={id}>
-                                    <NavLink
-                                        to={path}
-                                        onClick={() => window.innerWidth < 1024 && onClose()}
-                                        className={({ isActive }) => `
-                                            w-full flex items-center px-6 py-3.5 transition-all duration-300 group relative overflow-hidden
-                                            ${isActive ? 'text-primary' : 'text-secondary hover:text-primary'}
-                                            ${isMinimized ? 'justify-center px-0' : 'justify-between'}
-                                        `}
-                                        title={isMinimized ? label : ""}
-                                    >
-                                        {({ isActive }) => (
-                                            <>
-                                                {/* Active Indicator Bar */}
-                                                {isActive && (
-                                                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-8 bg-primary rounded-r-full shadow-[2px_0_10px_rgba(30,111,76,0.2)]" />
-                                                )}
-
-                                                <div className={`flex items-center gap-4 relative z-10 ${isMinimized ? '' : 'flex-1 ml-2'}`}>
-                                                    <Icon
-                                                        size={22}
-                                                        strokeWidth={isActive ? 2.5 : 2}
-                                                        className={`transition-transform duration-300 shrink-0 ${isActive ? 'scale-105' : 'group-hover:scale-105'}`}
-                                                    />
-                                                    {!isMinimized && <span className="text-[15px] font-bold whitespace-nowrap">{label}</span>}
-                                                </div>
-
-                                                {!isMinimized && badge && (
-                                                    <span className={`px-2.5 py-0.5 rounded-lg text-[10px] font-black transition-colors z-10 ${isActive ? 'bg-primary/10 text-primary' : 'bg-primary/5 text-primary'}`}>
-                                                        {badge}
-                                                    </span>
-                                                )}
-
-                                                {/* Hover Overlay */}
-                                                <div className={`absolute inset-0 bg-primary/5 transition-opacity duration-300 z-0 ${!isActive ? 'opacity-0 group-hover:opacity-100' : 'opacity-0'}`} />
-                                            </>
-                                        )}
-                                    </NavLink>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-
-                    <div className="mb-8">
-                        {!isMinimized && (
-                            <p className="px-6 text-[11px] font-bold text-secondary uppercase tracking-[0.2em] mb-3">Preferences</p>
-                        )}
-                        <ul className="space-y-1">
-                            {generalItems.map(({ id, icon: Icon, label, path }) => (
-                                <li key={id}>
-                                    <NavLink
-                                        to={path}
-                                        onClick={() => window.innerWidth < 1024 && onClose()}
-                                        className={({ isActive }) => `
-                                            w-full flex items-center px-6 py-3.5 transition-all duration-300 group relative overflow-hidden
-                                            ${isActive ? 'text-primary' : 'text-secondary hover:text-primary'}
-                                            ${isMinimized ? 'justify-center px-0' : 'justify-between'}
-                                        `}
-                                        title={isMinimized ? label : ""}
-                                    >
-                                        {({ isActive }) => (
-                                            <>
-                                                {/* Active Indicator Bar */}
-                                                {isActive && (
-                                                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-8 bg-primary rounded-r-full" />
-                                                )}
-
-                                                <div className={`flex items-center gap-4 relative z-10 transition-transform duration-300 ${isMinimized ? '' : 'flex-1 ml-2'}`}>
-                                                    <Icon
-                                                        size={22}
-                                                        strokeWidth={isActive ? 2.5 : 2}
-                                                        className="transition-transform duration-300 shrink-0"
-                                                    />
-                                                    {!isMinimized && <span className="text-[15px] font-bold whitespace-nowrap">{label}</span>}
-                                                </div>
-
-                                                {/* Hover Indicator */}
-                                                <div className={`absolute inset-0 bg-primary/5 transition-opacity duration-300 z-0 ${!isActive ? 'opacity-0 group-hover:opacity-100' : 'opacity-0'}`} />
-                                            </>
-                                        )}
-                                    </NavLink>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-                </div>
-
-                {/* Profile Section */}
-                <div className={`py-6 border-t border-accent/20 bg-accent/5 transition-all duration-300 ${isMinimized ? 'px-0' : 'px-4'}`}>
-                    <div className={`flex items-center gap-3 ${isMinimized ? 'flex-col px-0' : 'px-2'}`}>
-                        <div className="relative cursor-pointer group">
-                            <img
-                                src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"
-                                alt="Avatar"
-                                className="w-10 h-10 rounded-xl object-cover ring-2 ring-transparent group-hover:ring-primary/30 transition-all duration-300 shadow-sm"
-                            />
-                            <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-secondary border-2 border-white rounded-full shadow-sm" />
-                        </div>
-                        {!isMinimized && (
-                            <div className="flex-1 min-w-0">
-                                <p className="text-sm font-bold text-primary truncate">{user?.email?.split('@')[0] || 'User'}</p>
-                                <p className="text-[11px] text-secondary truncate">{user?.email || 'user@donezo.com'}</p>
-                            </div>
-                        )}
+                {/* Minimized view menu expansion trigger */}
+                {isMinimized && (
+                    <div className="px-4 mb-4 flex justify-center">
                         <button
-                            onClick={handleLogout}
-                            className={`text-secondary hover:text-red-500 hover:bg-red-50 rounded-xl transition-all duration-300 cursor-pointer active:scale-90 ${isMinimized ? 'p-1.5 mt-2' : 'p-2'}`}
-                            title="Logout"
+                            onClick={onToggleMinimize}
+                            className="p-3 text-gray-400 hover:text-primary hover:bg-primary/5 rounded-2xl transition-all"
                         >
-                            <LogOut size={18} />
+                            <Menu size={22} />
                         </button>
                     </div>
+                )}
+
+                {/* NAVIGATION LIST: Wraps all menu blocks */}
+                <div className="flex-1 overflow-x-hidden px-4">
+
+                    {/* Primary Menu Block */}
+                    <nav className="mb-4">
+                        {!isMinimized && <SectionTitle title="Menu" />}
+                        <ul className="space-y-0.5">
+                            {NAVIGATION_SECTIONS.main.map((item) => (
+                                <li key={item.id}>
+                                    <SidebarLink item={item} isMinimized={isMinimized} getNavLinkClasses={getNavLinkClasses} onClose={onClose} />
+                                </li>
+                            ))}
+                        </ul>
+                    </nav>
+
+                    {/* System/General Block */}
+                    <nav className="mb-4">
+                        {!isMinimized && <SectionTitle title="General" />}
+                        <ul className="space-y-0.5">
+                            {NAVIGATION_SECTIONS.general.map((item) => (
+                                <li key={item.id}>
+                                    <SidebarLink item={item} isMinimized={isMinimized} getNavLinkClasses={getNavLinkClasses} onClose={onClose} />
+                                </li>
+                            ))}
+                            {/* Special Logout Action */}
+                            <li>
+                                <button
+                                    onClick={handleLogoutAction}
+                                    className={`w-full flex items-center px-4 py-2.5 rounded-2xl text-gray-400 hover:text-red-500 transition-all duration-200 group ${isMinimized ? 'justify-center' : ''}`}
+                                    title={isMinimized ? "Logout" : ""}
+                                >
+                                    <div className="flex items-center gap-4">
+                                        <LogOut size={22} className="text-gray-300 group-hover:text-red-400" strokeWidth={2} />
+                                        {!isMinimized && <span className="text-[16px] font-medium">Logout</span>}
+                                    </div>
+                                </button>
+                            </li>
+                        </ul>
+                    </nav>
                 </div>
 
+                {/* PROMOTION: Only visible in full-width mode */}
+                {!isMinimized && <MobileAppPromo />}
+
                 <style>{`
-                    .custom-scrollbar::-webkit-scrollbar {
-                        width: 4px;
-                    }
-                    .custom-scrollbar::-webkit-scrollbar-track {
-                        background: transparent;
-                    }
-                    .custom-scrollbar::-webkit-scrollbar-thumb {
-                        background: #c8e6c9;
-                        border-radius: 10px;
-                    }
-                    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-                        background: var(--color-secondary);
-                    }
+                    .custom-scrollbar::-webkit-scrollbar { width: 0px; }
                 `}</style>
             </aside>
         </>
     );
 };
+
+// --- Sub-components to keep the main Sidebar logic clean and readable ---
+
+// Renders the section headings (e.g., MENU, GENERAL)
+const SectionTitle = ({ title }) => (
+    <p className="px-4 text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3">
+        {title}
+    </p>
+);
+
+// Renders individual navigation links with badge logic
+const SidebarLink = ({ item, isMinimized, getNavLinkClasses, onClose }) => {
+    const { icon: Icon, label, path, badge } = item;
+
+    return (
+        <NavLink
+            to={path}
+            onClick={() => window.innerWidth < 1024 && onClose()}
+            className={({ isActive }) => getNavLinkClasses(isActive)}
+            title={isMinimized ? label : ""}
+        >
+            {({ isActive }) => (
+                <>
+                    {/* Visual indicator for active route */}
+                    {isActive && (
+                        <div className="absolute left-[-16px] top-1/2 -translate-y-1/2 w-2 h-9 bg-primary rounded-r-full shadow-sm" />
+                    )}
+
+                    <div className="flex items-center gap-4">
+                        <Icon
+                            size={22}
+                            className={isActive ? 'text-primary' : 'text-gray-300 group-hover:text-gray-400'}
+                            strokeWidth={isActive ? 2.5 : 2}
+                        />
+                        {!isMinimized && (
+                            <span className={`text-[16px] ${isActive ? 'font-semibold' : 'font-medium'}`}>
+                                {label}
+                            </span>
+                        )}
+                    </div>
+
+                    {!isMinimized && badge && (
+                        <span className="bg-[#0D3D29] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md">
+                            {badge}
+                        </span>
+                    )}
+                </>
+            )}
+        </NavLink>
+    );
+};
+
+// The 'Donezo' Logo Icon Component
+const LogoIcon = () => (
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full text-white">
+        <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2.5" />
+        <circle cx="12" cy="12" r="3.5" fill="currentColor" />
+        <path d="M12 2C14 2 16.5 3.5 17.5 5" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
+    </svg>
+);
+
+// Promotional Card Component for Mobile App
+const MobileAppPromo = () => (
+    <div className="px-6 pb-6 mt-auto">
+        <div className="relative bg-[#05110B] rounded-[32px] p-6 overflow-hidden shadow-2xl">
+            {/* Background pattern logic */}
+            <div className="absolute inset-0 opacity-40">
+                <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                    <circle cx="130" cy="130" r="100" stroke="#1E6F4C" strokeWidth="1" fill="none" opacity="0.6" />
+                    <circle cx="130" cy="130" r="85" stroke="#1E6F4C" strokeWidth="1" fill="none" opacity="0.5" />
+                    <circle cx="130" cy="130" r="70" stroke="#1E6F4C" strokeWidth="1" fill="none" opacity="0.4" />
+                    <circle cx="130" cy="130" r="55" stroke="#1E6F4C" strokeWidth="1" fill="none" opacity="0.3" />
+                </svg>
+                <div className="absolute -bottom-10 -right-10 w-48 h-48 bg-primary/20 blur-[50px] rounded-full" />
+            </div>
+
+            <div className="relative z-10 flex flex-col items-center text-center">
+                {/* Secondary brand icon for promo card */}
+                <div className="w-9 h-9 bg-white rounded-full flex items-center justify-center mb-4">
+                    <div className="w-5 h-5 text-primary">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+                            <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2.5" />
+                            <circle cx="12" cy="12" r="4" fill="currentColor" />
+                        </svg>
+                    </div>
+                </div>
+                <h4 className="text-white font-bold text-[17px] leading-tight mb-1">Download our<br />Mobile App</h4>
+                <p className="text-gray-500 text-[11px] mb-6 font-medium">Get easy in another way</p>
+                <button className="w-full bg-primary hover:bg-primary/90 text-white py-3 rounded-2xl text-sm font-bold transition-all active:scale-95 shadow-lg shadow-black/20">
+                    Download
+                </button>
+            </div>
+        </div>
+    </div>
+);
 
 export default Sidebar;
