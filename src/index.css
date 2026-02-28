@@ -2,7 +2,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 @theme {
-  /* ===== Brand Colors (Only these 3 — no extras) ===== */
+  /* ===== Brand Colors  */
   --color-primary: #1E6F4C;
   --color-secondary: #2E8B57;
   --color-accent: #4CAF7D;
@@ -10,43 +10,8 @@
   --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
 }
 
-/* ===== Global Base ===== */
-*, *::before, *::after {
-  box-sizing: border-box;
-}
 
 html {
   scroll-behavior: smooth;
 }
 
-body {
-  font-family: var(--font-sans);
-  background-color: #f5f5f5;
-  color: #1a1a1a;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* ===== Scrollbar Styling ===== */
-::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #c8e6c9;
-  border-radius: 99px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--color-secondary);
-}
-
-::selection {
-  background-color: var(--color-primary);
-  color: white;
-}
