@@ -1,53 +1,79 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Pause, Square } from 'lucide-react';
 
+/**
+ * TimeTracker Component
+ * Provides real-time event tracking with a premium wavy background theme.
+ */
 const TimeTracker = () => {
+    // Timer state management (seconds since session start)
     const [running, setRunning] = useState(true);
-    const [seconds, setSeconds] = useState(5048); // 01:24:08
-    const intervalRef = useRef(null);
+    const [elapsed, setElapsed] = useState(5048); // Initialized to 01:24:08
+    const intervalHandle = useRef(null);
 
+    // Dynamic timer effect logic
     useEffect(() => {
         if (running) {
-            intervalRef.current = setInterval(() => {
-                setSeconds((s) => s + 1);
+            intervalHandle.current = setInterval(() => {
+                setElapsed(prev => prev + 1);
             }, 1000);
         } else {
-            clearInterval(intervalRef.current);
+            clearInterval(intervalHandle.current);
         }
-        return () => clearInterval(intervalRef.current);
+        return () => clearInterval(intervalHandle.current);
     }, [running]);
 
-    const hrs = String(Math.floor(seconds / 3600)).padStart(2, '0');
-    const mins = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
-    const secs = String(seconds % 60).padStart(2, '0');
+    // Time Formatting Utility: Converts total seconds into HH:MM:SS format
+    const formatTime = (totalSecs) => {
+        const h = String(Math.floor(totalSecs / 3600)).padStart(2, '0');
+        const m = String(Math.floor((totalSecs % 3600) / 60)).padStart(2, '0');
+        const s = String(totalSecs % 60).padStart(2, '0');
+        return `${h}:${m}:${s}`;
+    };
 
     return (
-        <div className="bg-[#0D1F14] rounded-2xl p-5 relative overflow-hidden">
-            {/* Decorative blobs */}
-            <div className="absolute -top-8 -right-8 w-36 h-36 bg-brand/20 rounded-full blur-2xl pointer-events-none" />
-            <div className="absolute -bottom-8 -left-8 w-28 h-28 bg-brand-light/15 rounded-full blur-2xl pointer-events-none" />
+        <div className="bg-[#0D3D29] rounded-[32px] p-8 relative overflow-hidden shadow-2xl h-full">
+            {/* BACKGROUND PATTERN: Premium ellipses effect matching the design reference */}
+            <div className="absolute inset-0 opacity-20 pointer-events-none">
+                <svg className="w-full h-full" viewBox="0 0 200 200" preserveAspectRatio="none">
+                    <ellipse cx="220" cy="220" rx="180" ry="140" stroke="white" strokeWidth="1" fill="none" opacity="0.8" />
+                    <ellipse cx="220" cy="220" rx="160" ry="120" stroke="white" strokeWidth="1" fill="none" opacity="0.7" />
+                    <ellipse cx="220" cy="220" rx="140" ry="100" stroke="white" strokeWidth="1" fill="none" opacity="0.6" />
+                    <ellipse cx="220" cy="220" rx="120" ry="80" stroke="white" strokeWidth="1" fill="none" opacity="0.5" />
+                    <ellipse cx="220" cy="220" rx="100" ry="60" stroke="white" strokeWidth="1" fill="none" opacity="0.4" />
+                </svg>
+            </div>
 
-            <div className="relative z-10">
-                <h2 className="text-sm font-bold text-white/80 mb-4">Time Tracker</h2>
+            {/* Subtle radial glow to give depth to the dark green background */}
+            <div className="absolute -bottom-10 -right-10 w-48 h-48 bg-white/10 blur-[60px] rounded-full" />
 
-                <p className="text-4xl font-extrabold text-white tracking-widest text-center mb-5 tabular-nums">
-                    {hrs}:{mins}:{secs}
+            {/* INTERACTIVE UI: Timer display and localized control buttons */}
+            <div className="relative z-10 flex flex-col items-center">
+                <h3 className="text-[15px] font-bold text-white/70 w-full text-left mb-6">Time Tracker</h3>
+
+                {/* Big, bold digital display showing current tracking state */}
+                <p className="text-[52px] font-black text-white tracking-widest leading-none mb-8 tabular-nums">
+                    {formatTime(elapsed)}
                 </p>
 
-                <div className="flex justify-center gap-3">
+                {/* CONTROL ACTION BAR */}
+                <div className="flex gap-4">
+                    {/* Primary Toggle: Pause/Play Action */}
                     <button
-                        onClick={() => setRunning((r) => !r)}
-                        className="w-10 h-10 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center text-white transition-colors cursor-pointer"
-                        title={running ? 'Pause' : 'Resume'}
+                        onClick={() => setRunning(!running)}
+                        className="w-14 h-14 rounded-full bg-white flex items-center justify-center text-[#0D3D29] hover:bg-white/90 transition-all active:scale-90 shadow-lg shadow-black/20"
+                        title={running ? 'Pause Tracking' : 'Resume Tracking'}
                     >
-                        <Pause size={17} />
+                        {running ? <Pause size={24} fill="currentColor" strokeWidth={0} /> : <div className="ml-1 w-0 h-0 border-y-8 border-y-transparent border-l-14 border-l-currentColor" />}
                     </button>
+
+                    {/* Secondary Stop: Red Alert Style */}
                     <button
-                        onClick={() => { setRunning(false); setSeconds(0); }}
-                        className="w-10 h-10 rounded-full bg-danger/80 hover:bg-danger flex items-center justify-center text-white transition-colors cursor-pointer"
-                        title="Stop"
+                        onClick={() => { setRunning(false); setElapsed(0); }}
+                        className="w-14 h-14 rounded-full bg-[#E53935] flex items-center justify-center text-white hover:bg-[#D32F2F] transition-all active:scale-90 shadow-lg shadow-black/20"
+                        title="Reset/Stop Timer"
                     >
-                        <Square size={15} />
+                        <Square size={20} fill="currentColor" strokeWidth={0} />
                     </button>
                 </div>
             </div>

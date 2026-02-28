@@ -3,156 +3,147 @@ import {
     BarChart, Bar, XAxis, YAxis, Cell, ResponsiveContainer, Tooltip
 } from 'recharts';
 
-// Map API analytics data to days of week, or use fallback
-const fallbackData = [
-    { day: 'S', value: 45, active: false },
-    { day: 'M', value: 68, active: false },
-    { day: 'T', value: 78, active: true, label: '74%' },
-    { day: 'W', value: 55, active: false },
-    { day: 'T', value: 85, active: false },
-    { day: 'F', value: 50, active: false },
-    { day: 'S', value: 38, active: false },
+/**
+ * Chart Data Configuration
+ * Strictly follows the visual pattern from the design reference.
+ */
+const CHART_DATA = [
+    { day: 'S', value: 55, type: 'striped', color: '#E5E7EB' },
+    { day: 'M', value: 85, type: 'solid', color: '#2D845B' }, // Medium Green
+    { day: 'T', value: 70, type: 'solid', color: '#66C692', hasLabel: true, label: '74%' }, // Light Green
+    { day: 'W', value: 95, type: 'solid', color: '#0D3D29' }, // Dark Green
+    { day: 'T', value: 75, type: 'striped', color: '#E5E7EB' },
+    { day: 'F', value: 65, type: 'striped', color: '#E5E7EB' },
+    { day: 'S', value: 50, type: 'striped', color: '#E5E7EB' },
 ];
 
-const mapApiToChart = (apiData) => {
-    const days = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-    return apiData.slice(0, 7).map((d, i) => ({
-        day: days[i] || days[i % 7],
-        value: d.views ? Math.round(d.views / 20) : d.clicks || 50,
-        active: i === 2,
-        label: i === 2 ? '74%' : undefined,
-    }));
-};
-
-// Custom pill-shaped bar with diagonal stripe for inactive
-const PillBar = (props) => {
-    const { x, y, width, height, active } = props;
+/**
+ * Custom Bar Component
+ * Handles solid colors and diagonal stripe patterns for the bars.
+ */
+const CustomRoundedBar = (props) => {
+    const { x, y, width, height, payload } = props;
     if (!height || height <= 0) return null;
 
-    const rx = width / 2;
-    const patternId = `stripe-${x}`;
+    const radius = width / 2;
+    const patternId = `bar-pattern-${payload.day}-${x}`;
 
-    if (!active) {
-        return (
-            <g>
-                <defs>
-                    <pattern id={patternId} patternUnits="userSpaceOnUse" width="8" height="8" patternTransform="rotate(45)">
-                        <line x1="0" y1="0" x2="0" y2="8" stroke="#C8D8C8" strokeWidth="4" />
-                    </pattern>
-                    <clipPath id={`clip-${x}`}>
-                        <rect x={x} y={y} width={width} height={height} rx={rx} ry={rx} />
-                    </clipPath>
-                </defs>
+    return (
+        <g>
+            <defs>
+                {/* Diagonal Stripes Pattern definition */}
+                <pattern
+                    id={patternId}
+                    patternUnits="userSpaceOnUse"
+                    width="10"
+                    height="10"
+                    patternTransform="rotate(45)"
+                >
+                    <line x1="0" y1="0" x2="0" y2="10" stroke="#D1D5DB" strokeWidth="5" />
+                </pattern>
+            </defs>
+
+            {/* The main bar shape */}
+            <rect
+                x={x}
+                y={y}
+                width={width}
+                height={height}
+                rx={radius}
+                fill={payload.type === 'striped' ? `url(#${patternId})` : payload.color}
+                className="transition-all duration-300"
+            />
+
+            {/* Outline for striped bars to give the "pill" definition */}
+            {payload.type === 'striped' && (
                 <rect
                     x={x}
                     y={y}
                     width={width}
                     height={height}
-                    rx={rx}
-                    ry={rx}
-                    fill={`url(#${patternId})`}
-                    stroke="#C8D8C8"
-                    strokeWidth="1.5"
-                    clipPath={`url(#clip-${x})`}
+                    rx={radius}
+                    fill="none"
+                    stroke="#E5E7EB"
+                    strokeWidth="1"
                 />
-            </g>
-        );
-    }
-
-    // Active bar — solid dark green (pill shape)
-    return (
-        <rect
-            x={x}
-            y={y}
-            width={width}
-            height={height}
-            rx={rx}
-            ry={rx}
-            fill="#064E3B"
-        />
-    );
-};
-
-// Custom label above active bar
-const CustomLabel = (props) => {
-    const { x, y, width, value, index, data } = props;
-    const bar = data[index];
-    if (!bar?.active || !bar?.label) return null;
-    return (
-        <g>
-            <rect
-                x={x + width / 2 - 20}
-                y={y - 28}
-                width={40}
-                height={20}
-                rx={6}
-                fill="white"
-                stroke="#e5e7eb"
-                strokeWidth="1"
-            />
-            <text
-                x={x + width / 2}
-                y={y - 14}
-                textAnchor="middle"
-                fill="#0D1611"
-                fontSize={11}
-                fontWeight={700}
-            >
-                {bar.label}
-            </text>
+            )}
         </g>
     );
 };
 
-const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-        return (
-            <div className="bg-white border border-gray-100 shadow-lg rounded-xl px-3 py-2 text-xs">
-                <p className="text-secondary mb-1">{label}</p>
-                <p className="font-bold text-primary">{payload[0].value}</p>
-            </div>
-        );
-    }
-    return null;
-};
+/**
+ * Floating Label for active data points
+ */
+const BarValueLabel = (props) => {
+    const { x, y, width, index } = props;
+    const item = CHART_DATA[index];
 
-const ProjectAnalytics = ({ analyticsData }) => {
-    const chartData = analyticsData ? mapApiToChart(analyticsData) : fallbackData;
+    if (!item?.hasLabel) return null;
 
     return (
-        <div className="bg-white rounded-2xl p-5 sm:p-6 border border-gray-100 hover:shadow-md transition-shadow h-full">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-6">
-                <h2 className="text-base font-bold text-[#0D1611]">Project Analytics</h2>
-            </div>
+        <g>
+            {/* Label Background Box */}
+            <rect
+                x={x + width / 2 - 20}
+                y={y - 32}
+                width={40}
+                height={22}
+                rx={6}
+                fill="white"
+                className="shadow-sm"
+                filter="drop-shadow(0 2px 4px rgba(0,0,0,0.05))"
+            />
+            {/* Label Text */}
+            <text
+                x={x + width / 2}
+                y={y - 17}
+                textAnchor="middle"
+                fill="#111827"
+                fontSize={11}
+                fontWeight={700}
+            >
+                {item.label}
+            </text>
+            {/* Small pointer at the bottom of label */}
+            <path
+                d={`M ${x + width / 2 - 4} ${y - 10} L ${x + width / 2} ${y - 6} L ${x + width / 2 + 4} ${y - 10} Z`}
+                fill="white"
+            />
+        </g>
+    );
+};
 
-            {/* Recharts Bar Chart with custom pill bars */}
-            <ResponsiveContainer width="100%" height={200}>
-                <BarChart
-                    data={chartData}
-                    barSize={32}
-                    margin={{ top: 36, right: 8, left: -30, bottom: 0 }}
-                >
-                    <XAxis
-                        dataKey="day"
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fill: '#9CA3AF', fontSize: 12, fontWeight: 600 }}
-                    />
-                    <YAxis hide />
-                    <Tooltip content={<CustomTooltip />} cursor={{ fill: 'transparent' }} />
-                    <Bar
-                        dataKey="value"
-                        shape={<PillBar />}
-                        label={<CustomLabel data={chartData} />}
-                        radius={[20, 20, 20, 20]}
+const ProjectAnalytics = () => {
+    return (
+        <div className="bg-white rounded-[32px] p-8 border border-gray-100/50 h-full">
+            <h2 className="text-[18px] font-bold text-[#0D1611] mb-8">Project Analytics</h2>
+
+            <div className="h-[200px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                        data={CHART_DATA}
+                        barSize={38}
+                        margin={{ top: 40, right: 0, left: 0, bottom: 0 }}
                     >
-                        {chartData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.active ? '#064E3B' : '#E8F5E9'} />
-                        ))}
-                    </Bar>
-                </BarChart>
-            </ResponsiveContainer>
+                        <XAxis
+                            dataKey="day"
+                            axisLine={false}
+                            tickLine={false}
+                            tick={{ fill: '#9CA3AF', fontSize: 13, fontWeight: 500 }}
+                            dy={15}
+                        />
+                        <YAxis hide />
+                        <Tooltip cursor={{ fill: 'transparent' }} content={() => null} />
+                        <Bar
+                            dataKey="value"
+                            shape={<CustomRoundedBar />}
+                            label={<BarValueLabel />}
+                            isAnimationActive={true}
+                            animationDuration={1000}
+                        />
+                    </BarChart>
+                </ResponsiveContainer>
+            </div>
         </div>
     );
 };

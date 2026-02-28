@@ -1,76 +1,97 @@
 import React from 'react';
-import { Plus, UserCheck, Clock, AlertCircle } from 'lucide-react';
+import { Plus } from 'lucide-react';
 
-const COLORS = ['#E53935', '#2E8B57', '#667085', '#F4B400', '#1E6F4C', '#5B73F5'];
-
-const statusStyle = {
-    'active': 'bg-green-50 text-green-700',
-    'inactive': 'bg-gray-100 text-gray-500',
-};
-
-const statusLabel = {
-    'active': 'Active',
-    'inactive': 'Inactive',
-};
-
-const getInitials = (name = '') =>
-    name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-
-// Fallback static data if API data is not available
-const fallbackMembers = [
-    { id: 1, name: 'Alexandra Deff', email: 'alex@example.com', status: 'active', joinDate: '2024-01-15' },
-    { id: 2, name: 'Edwin Adenike', email: 'ed@example.com', status: 'active', joinDate: '2024-02-20' },
-    { id: 3, name: 'Isaac Oluwatemilorun', email: 'isaac@example.com', status: 'inactive', joinDate: '2024-01-10' },
-    { id: 4, name: 'David Oshodi', email: 'david@example.com', status: 'active', joinDate: '2024-03-05' },
+/**
+ * Team Integration Configuration
+ * Maps team members to their active tasks and status indicators.
+ */
+const TEAM_USERS = [
+    {
+        id: 1,
+        name: 'Alexandra Deff',
+        task: 'Working on Github Project Repository',
+        status: 'Completed',
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Annie'
+    },
+    {
+        id: 2,
+        name: 'Edwin Adenike',
+        task: 'Working on Integrate User Authentication System',
+        status: 'In Progress',
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Eden'
+    },
+    {
+        id: 3,
+        name: 'Isaac Oluwatemilorun',
+        task: 'Working on Develop Search and Filter Functionality',
+        status: 'Pending',
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Idan'
+    },
+    {
+        id: 4,
+        name: 'David Oshodi',
+        task: 'Working on Responsive Layout for Homepage',
+        status: 'In Progress',
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Dave'
+    },
 ];
 
-const TeamCollaboration = ({ users }) => {
-    const members = users || fallbackMembers;
-    const displayMembers = members.slice(0, 5);
-
+const TeamCollaboration = () => {
     return (
-        <div className="bg-white rounded-2xl p-5 border border-gray-100 hover:shadow-md transition-shadow h-full">
-            <div className="flex items-center justify-between mb-5">
-                <h2 className="text-base font-bold text-[#0D1611]">Team Members</h2>
-                <button className="flex items-center gap-1.5 text-xs font-semibold text-secondary border border-gray-200 rounded-full px-3.5 py-1.5 hover:border-primary hover:text-primary transition-colors cursor-pointer">
-                    <Plus size={13} />
+        <div className="bg-white rounded-[32px] p-6 border border-gray-100/50 hover:shadow-md transition-shadow h-full">
+            <header className="flex items-center justify-between mb-6">
+                <h2 className="text-[18px] font-bold text-[#0D1611]">Team Collaboration</h2>
+                <button className="flex items-center gap-1.5 text-xs font-bold text-gray-500 border border-gray-300 rounded-full px-4 py-2 hover:border-primary hover:text-primary transition-all cursor-pointer active:scale-95 group">
+                    <Plus size={14} strokeWidth={3} className="text-gray-400 group-hover:text-primary transition-colors" />
                     Add Member
                 </button>
-            </div>
+            </header>
 
-            <div className="space-y-3.5">
-                {displayMembers.map(({ id, name, email, status, joinDate }, idx) => (
-                    <div key={id} className="flex items-center gap-3">
-                        {/* Avatar */}
-                        <div
-                            className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 ring-2 ring-white shadow-sm"
-                            style={{ background: COLORS[idx % COLORS.length] }}
-                        >
-                            {getInitials(name)}
+            {/* TEAM FEED: List of collaborative team members */}
+            <div className="space-y-6">
+                {TEAM_USERS.map((member) => (
+                    <div key={member.id} className="flex items-center justify-between group">
+                        <div className="flex items-center gap-4 flex-1 min-w-0">
+                            {/* Visual Avatar with seed-based artwork */}
+                            <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-50 border-2 border-white shadow-sm shrink-0">
+                                <img src={member.avatar} alt={member.name} className="w-full h-full object-cover" />
+                            </div>
+
+                            {/* Member Details: Name and Active Task */}
+                            <div className="min-w-0 pr-4">
+                                <h4 className="text-[15px] font-bold text-[#0D1611] leading-none mb-1.5 group-hover:text-primary">
+                                    {member.name}
+                                </h4>
+                                <p className="text-[12px] text-gray-400 font-medium truncate">
+                                    {member.task}
+                                </p>
+                            </div>
                         </div>
-                        {/* Info */}
-                        <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold text-[#0D1611] truncate">{name}</p>
-                            <p className="text-[11px] text-secondary truncate flex items-center gap-1">
-                                <Clock size={10} />
-                                Joined {new Date(joinDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                            </p>
+
+                        {/* STATUS LABEL: Modern badges with variant-based styling */}
+                        <div className="shrink-0 flex justify-end">
+                            <StatusBadge status={member.status} />
                         </div>
-                        {/* Status Badge */}
-                        <span className={`shrink-0 text-[10px] font-semibold px-2.5 py-1 rounded-full flex items-center gap-1 ${statusStyle[status] || 'bg-gray-100 text-gray-500'}`}>
-                            <UserCheck size={10} />
-                            {statusLabel[status] || status}
-                        </span>
                     </div>
                 ))}
             </div>
-
-            {members.length > 5 && (
-                <button className="mt-4 w-full text-center text-xs font-semibold text-secondary hover:text-primary transition-colors py-2 border-t border-gray-50">
-                    +{members.length - 5} more members
-                </button>
-            )}
         </div>
+    );
+};
+
+// --- Helper for rendering status badges ---
+const StatusBadge = ({ status }) => {
+    // Config for status colors with human names
+    const statusMap = {
+        'Completed': 'bg-[#F0FDF4] text-green-700 border-green-100',
+        'In Progress': 'bg-[#FFFBEB] text-yellow-600 border-yellow-100',
+        'Pending': 'bg-[#FFF1F2] text-red-500 border-red-100'
+    };
+
+    return (
+        <span className={`px-2.5 py-1 text-[11px] font-bold rounded-md border text-center min-w-[85px] transition-all capitalize ${statusMap[status] || 'bg-gray-50 text-gray-500'}`}>
+            {status}
+        </span>
     );
 };
 

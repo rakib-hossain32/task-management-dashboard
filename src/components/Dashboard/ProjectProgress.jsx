@@ -1,127 +1,99 @@
 import React from 'react';
 
-const percentage = 41;
-// Half-donut: we use a semicircle approach
-const r = 68;
-const cx = 90;
-const cy = 90;
-const circumference = Math.PI * r; // half circle = π*r
-
-// Diagonal stripe pattern for "pending" arc section
-const arcOffset = circumference - (percentage / 100) * circumference;
-
-// Helper: polar to cartesian
-const polarToCartesian = (cx, cy, r, angleDeg) => {
-    const rad = ((angleDeg - 180) * Math.PI) / 180;
-    return {
-        x: cx + r * Math.cos(rad),
-        y: cy + r * Math.sin(rad),
-    };
-};
-
-// Describe an arc from startAngle to endAngle (degrees 0=left, 180=right)
-const describeArc = (cx, cy, r, startAngle, endAngle) => {
-    const start = polarToCartesian(cx, cy, r, endAngle);
-    const end = polarToCartesian(cx, cy, r, startAngle);
-    const largeArc = endAngle - startAngle > 180 ? 1 : 0;
-    return `M ${start.x} ${start.y} A ${r} ${r} 0 ${largeArc} 0 ${end.x} ${end.y}`;
-};
-
+/**
+ * ProjectProgress Component
+ * Visualizes overall progress using a semi-circular gauge model and custom legend.
+ */
 const ProjectProgress = () => {
-    const completedEnd = 180 * (percentage / 100); // 0 to 180 degrees
-    const inProgressEnd = completedEnd + 180 * 0.30; // next ~30%
-    // rest is pending
+    // Current Progress percentage configuration
+    const completionRate = 41;
+    const progressR = 75;
+    const progressCX = 100;
+    const progressCY = 100;
+
+    // SVG geometry helpers
+    const getCartesian = (cx, cy, r, degrees) => {
+        const radians = ((degrees - 180) * Math.PI) / 180;
+        return {
+            x: cx + r * Math.cos(radians),
+            y: cy + r * Math.sin(radians),
+        };
+    };
+
+    const getArcPath = (cx, cy, r, startDeg, endDeg) => {
+        const start = getCartesian(cx, cy, r, endDeg);
+        const end = getCartesian(cx, cy, r, startDeg);
+        const largeArc = endDeg - startDeg > 180 ? 1 : 0;
+        return `M ${start.x} ${start.y} A ${r} ${r} 0 ${largeArc} 0 ${end.x} ${end.y}`;
+    };
+
+    // Calculate arc endings based on percentages
+    const completedEnd = 180 * (completionRate / 100);
+    const inProgressEnd = completedEnd + 180 * 0.35; // Example: next 35% in progress
 
     return (
-        <div className="bg-white rounded-2xl p-5 border border-gray-100 hover:shadow-md transition-shadow h-full flex flex-col">
-            <h2 className="text-base font-bold text-[#0D1611] mb-4">Project Progress</h2>
+        <div className="bg-white rounded-[32px] p-6 border border-gray-100/50 hover:shadow-md transition-shadow flex flex-col items-center w-full h-full">
+            <h2 className="text-[18px] font-bold text-[#0D1611] w-full text-left mb-4">Project Progress</h2>
 
-            <div className="flex flex-col items-center gap-4 flex-1 justify-center">
-                {/* Half-Donut Gauge */}
-                <div className="relative" style={{ width: 180, height: 100 }}>
-                    <svg width="180" height="100" viewBox="0 0 180 100" overflow="visible">
+            <div className="flex-1 flex flex-col items-center justify-center -mt-6">
+                {/* GAUGE: Semicircular progress visual with layered paths */}
+                <div className="relative w-[240px] h-[130px] flex justify-center">
+                    <svg width="200" height="110" viewBox="0 0 200 110" className="overflow-visible">
                         <defs>
-                            {/* Diagonal stripe for pending */}
-                            <pattern id="pendingStripe" patternUnits="userSpaceOnUse" width="8" height="8" patternTransform="rotate(45)">
-                                <line x1="0" y1="0" x2="0" y2="8" stroke="#d1d5db" strokeWidth="4" />
+                            {/* Texture pattern for 'Pending' tasks */}
+                            <pattern id="pendingTexture" patternUnits="userSpaceOnUse" width="10" height="10" patternTransform="rotate(45)">
+                                <line x1="0" y1="0" x2="0" y2="10" stroke="#D1D5DB" strokeWidth="6" />
                             </pattern>
-                            <clipPath id="gaugeClip">
-                                {/* Only show upper half (semicircle) */}
-                                <rect x="0" y="0" width="180" height="100" />
-                            </clipPath>
                         </defs>
 
-                        {/* BG track (full half arc — pending stripe) */}
-                        <path
-                            d={describeArc(90, 90, r, 0, 180)}
-                            fill="none"
-                            stroke="url(#pendingStripe)"
-                            strokeWidth={18}
-                            strokeLinecap="butt"
-                            clipPath="url(#gaugeClip)"
-                        />
-                        {/* Pending outline */}
-                        <path
-                            d={describeArc(90, 90, r, 0, 180)}
-                            fill="none"
-                            stroke="#d1d5db"
-                            strokeWidth={18}
-                            strokeLinecap="butt"
-                            strokeDasharray="4 4"
-                            clipPath="url(#gaugeClip)"
-                            opacity={0.5}
-                        />
+                        {/* Background Path (Full pending state) */}
+                        <path d={getArcPath(progressCX, progressCY, progressR, 0, 180)} fill="none" stroke="url(#pendingTexture)" strokeWidth="24" />
+                        <path d={getArcPath(progressCX, progressCY, progressR, 0, 180)} fill="none" stroke="#E5E7EB" strokeWidth="24" opacity="0.4" />
 
-                        {/* In Progress arc (lighter green) */}
-                        <path
-                            d={describeArc(90, 90, r, completedEnd, Math.min(inProgressEnd, 180))}
-                            fill="none"
-                            stroke="#4CAF7D"
-                            strokeWidth={18}
-                            strokeLinecap="butt"
-                            clipPath="url(#gaugeClip)"
-                        />
+                        {/* In Progress Arc (Light Green Variant) */}
+                        <path d={getArcPath(progressCX, progressCY, progressR, completedEnd, Math.min(inProgressEnd, 180))} fill="none" stroke="#66C692" strokeWidth="24" />
 
-                        {/* Completed arc (dark green) */}
-                        <path
-                            d={describeArc(90, 90, r, 0, completedEnd)}
-                            fill="none"
-                            stroke="#064E3B"
-                            strokeWidth={18}
-                            strokeLinecap="butt"
-                            clipPath="url(#gaugeClip)"
-                        />
-
-                        {/* Round caps at start and end */}
-                        <circle cx={polarToCartesian(90, 90, r, 0).x} cy={polarToCartesian(90, 90, r, 0).y} r={9} fill="#064E3B" />
-                        <circle cx={polarToCartesian(90, 90, r, 180).x} cy={polarToCartesian(90, 90, r, 180).y} r={9} fill="#d1d5db" />
+                        {/* Completed Arc (Deep Green Variant) */}
+                        <path d={getArcPath(progressCX, progressCY, progressR, 0, completedEnd)} fill="none" stroke="#2D845B" strokeWidth="24" />
                     </svg>
 
-                    {/* Center text */}
-                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 text-center pb-1">
-                        <p className="text-3xl font-extrabold text-[#0D1611] leading-none">{percentage}%</p>
-                        <p className="text-[10px] font-semibold text-secondary mt-0.5">Project Ended</p>
+                    {/* Progress Metric: Center overlapping text */}
+                    <div className="absolute bottom-2 text-center group">
+                        <h3 className="text-[48px] font-black text-[#0D1611] leading-none mb-1 tabular-nums group-hover:scale-105 transition-transform">
+                            {completionRate}%
+                        </h3>
+                        <p className="text-[13px] font-bold text-gray-500">Project Ended</p>
                     </div>
                 </div>
 
-                {/* Legend */}
-                <div className="flex items-center justify-center gap-4 text-[11px] font-semibold text-secondary flex-wrap">
-                    <div className="flex items-center gap-1.5">
-                        <div className="w-2.5 h-2.5 rounded-full bg-[#064E3B]" />
-                        Completed
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                        <div className="w-2.5 h-2.5 rounded-full bg-accent" />
-                        In Progress
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                        <div className="w-3 h-2.5 rounded-sm border-2 border-dashed border-gray-300 bg-gray-50" />
-                        Pending
-                    </div>
+                {/* VISUAL LEGEND: Simple dot indicators for chart interpretation */}
+                <div className="flex items-center gap-6 mt-8">
+                    <LegendItem color="#2D845B" label="Completed" />
+                    <LegendItem color="#66C692" label="In Progress" />
+                    <LegendItem type="pattern" label="Pending" />
                 </div>
             </div>
         </div>
     );
 };
+
+// --- Sub-component for Legend Items to reduce duplication ---
+const LegendItem = ({ color, label, type }) => (
+    <div className="flex items-center gap-2">
+        {type === 'pattern' ? (
+            <div className="w-2.5 h-2.5 rounded-full bg-[#E5E7EB] border border-gray-200 overflow-hidden relative">
+                {/* SVG for patterned dot */}
+                <svg className="w-full h-full" viewBox="0 0 10 10">
+                    <line x1="0" y1="10" x2="10" y2="0" stroke="#9CA3AF" strokeWidth="2" />
+                    <line x1="0" y1="5" x2="5" y2="0" stroke="#9CA3AF" strokeWidth="2" />
+                    <line x1="5" y1="10" x2="10" y2="5" stroke="#9CA3AF" strokeWidth="2" />
+                </svg>
+            </div>
+        ) : (
+            <div className="w-2.5 h-2.5 rounded-full" style={{ background: color }} />
+        )}
+        <span className="text-[12px] font-bold text-gray-400">{label}</span>
+    </div>
+);
 
 export default ProjectProgress;
